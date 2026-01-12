@@ -17,7 +17,7 @@
 #define WE 27
 
 const int D[8] = { 2, 3, 4, 5, 6, 7, 8, 9 };
-const int A[11] = { 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49 };
+const int A[11] = { 49, 47, 45, 43, 41, 39, 37, 35, 33, 31, 29 };
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
@@ -87,6 +87,8 @@ void read_ram() {
     digitalWrite(CE, HIGH);
     delay_custom();
   }
+
+  set_address_bus_input();
 }
 
 // LOAD PROGRAM
@@ -104,6 +106,7 @@ void load_program() {
   }
 
   set_data_bus_output();
+  set_address_bus_output();
   for(int i=0; i<sizeof(program); i++) {
     // write addresses
     write_address_bus(i);
