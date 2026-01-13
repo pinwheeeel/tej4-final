@@ -17,13 +17,13 @@
 #define WE 27
 
 const int D[8] = { 2, 3, 4, 5, 6, 7, 8, 9 };
-const int A[11] = { 49, 47, 45, 43, 41, 39, 37, 35, 33, 31, 29 };
+const int A[11] = { 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49 };
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-const uint8_t program[] = {
+const uint8_t program[9] = {
   // bytes array
-  1,2,3,4,5,6,7,8
+  1,2,3,4,5,6,7,8,9
 };
 
 void setup() {
@@ -72,13 +72,16 @@ void read_ram() {
 
   for(int i=0; i<sizeof(program); i++) {
     write_address_bus(i);
+    delay_custom();
     // chip enable low
     digitalWrite(CE, LOW);
+    delay_custom();
     // orite enable low
     digitalWrite(OE, LOW);
     delay_custom();
 
-    Serial.println(read_data_bus());
+    Serial.print(read_data_bus());
+    Serial.println(": value");
     delay_custom();
 
     // chip enable high
@@ -87,8 +90,6 @@ void read_ram() {
     digitalWrite(CE, HIGH);
     delay_custom();
   }
-
-  set_address_bus_input();
 }
 
 // LOAD PROGRAM
@@ -105,8 +106,8 @@ void load_program() {
     delay_custom();
   }
 
-  set_data_bus_output();
   set_address_bus_output();
+  set_data_bus_output();
   for(int i=0; i<sizeof(program); i++) {
     // write addresses
     write_address_bus(i);
@@ -148,14 +149,23 @@ void set_data_bus_output() {
 
 int read_data_bus() {
   int value = 0;
-  for (int i = 0; i < 8; i++)
+  Serial.println("Read Data Bus");
+  for (int i = 0; i < 8; i++){
     value |= digitalRead(D[i]) << i;
+    Serial.print(digitalRead(D[i]));
+  }
+  Serial.println();
   return value;
 }
 
 void write_data_bus(int value) {
-  for (int i = 0; i < 8; i++)
+  Serial.print("Write Data Bus: ");
+  Serial.println(value);
+  for (int i = 0; i < 8; i++) {
     digitalWrite(D[i], (value >> i) & 1);
+    Serial.print((value>>i) & 1);
+  }
+  Serial.println();
 }
 
 // ADDRESS BUS FUNCTIONS
@@ -172,12 +182,23 @@ void set_address_bus_output() {
 
 int read_address_bus() {
   int value = 0;
-  for (int i = 0; i < 8; i++)
+  Serial.println("Read Address Bus");
+  for (int i = 0; i < 8; i++){
     value |= digitalRead(A[i]) << i;
+    Serial.print(digitalRead(A[i]));
+  }
+  Serial.println();
+
   return value;
 }
 
 void write_address_bus(int value) {
-  for (int i = 0; i < 8; i++)
+  Serial.print("Write Address Bus: ");
+  Serial.println(value);
+  for (int i = 0; i < 11; i++){
     digitalWrite(A[i], (value >> i) & 1);
+    Serial.print((value>>i) & 1);
+  }
+  Serial.println();
+    
 }
