@@ -23,7 +23,11 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 const uint8_t program[] = {
   // bytes array
-  0x3E,254,31,3,89,5,67,9,0
+  0x3E,0x05,
+  0x06,0x03,
+  0x80,
+  0x32,0x00,0x04,
+  0x18,0xFE
 };
 
 void setup() {
@@ -45,19 +49,30 @@ void setup() {
   pinMode(RESET, OUTPUT);
   pinMode(M1, INPUT);
   pinMode(RFSH, INPUT);
-
   Serial.begin(9600);
   load_program();
-  delay(100);
+  delay(1000);
   digitalWrite(RESET, HIGH);
+  set_address_bus_input();
+  read_ram();
 }
-
+int i = 0;
 void loop() {
+  i++;
   digitalWrite(CLK, LOW);
   delay_custom();
   digitalWrite(CLK, HIGH);
   delay_custom();
+  Serial.println(i);
+  Serial.print(digitalRead(IORQ));
+  Serial.print(" | ");
+  Serial.print(digitalRead(MREQ));
+  Serial.print(" | ");
+  Serial.print(digitalRead(RD));
+  Serial.print(" | ");
+  Serial.println(digitalRead(WR));
   if(digitalRead(MREQ)==LOW){ //Mem request
+    Serial.println("mreq low");
     digitalWrite(CE, LOW);
     if (digitalRead(RD)==LOW){ // Read data from ram
       digitalWrite(OE, LOW);
@@ -66,10 +81,14 @@ void loop() {
     }
     delay_custom();
     while (digitalRead(MREQ)==LOW){
+      digitalWrite(WAIT,HIGH);
+      //Serial.println("mreq looping");
       digitalWrite(CLK, LOW);
       delay_custom();
+      delay(100);
       digitalWrite(CLK, HIGH);
       delay_custom();
+      delay(100);
     }
     digitalWrite(OE, HIGH);
     digitalWrite(WE, HIGH);
@@ -77,31 +96,48 @@ void loop() {
     delay_custom();
   } else if(digitalRead(IORQ)==LOW){ //Io request
     if (digitalRead(RD)==LOW){ // Read data from ram
-      digitalWrite(OE, LOW);
+
     } else if (digitalRead(WR)==LOW){  // Write data to ram
-      digitalWrite(WE,LOW);
+      
     }
     delay_custom();
-    while (digitalRead(MREQ)==LOW){
+    while (digitalRead(IORQ)==LOW){
       digitalWrite(CLK, LOW);
       delay_custom();
       digitalWrite(CLK, HIGH);
       delay_custom();
     }
-    digitalWrite(OE, HIGH);
-    digitalWrite(WE, HIGH);
     delay_custom();
-  } 
-
-
+  }
 }
 
 void delay_custom() {
   delay(1);
 }
 
-// DEBUG: reading ram
+void read_ram_at(int i){
+  set_address_bus_output();
+  set_data_bus_input();
+  write_address_bus(i);
+  delay_custom();
+  // chip enable low
+  digitalWrite(CE, LOW);
+  // orite enable low
+  digitalWrite(OE, LOW);
+  delay_custom();
 
+  Serial.println(read_data_bus());
+  delay_custom();
+
+  // chip enable high
+  digitalWrite(OE, HIGH);
+  // orite enable high
+  digitalWrite(CE, HIGH);
+  delay_custom();
+  set_address_bus_input();
+}
+
+// DEBUG: reading ram
 void read_ram() {
   set_address_bus_output();
   set_data_bus_input();
@@ -164,8 +200,7 @@ void load_program() {
 
   set_data_bus_input();
   set_address_bus_input();
-
-
+  digitalWrite(WAIT,HIGH);
 }
 
 
