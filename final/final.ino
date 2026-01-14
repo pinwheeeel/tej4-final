@@ -48,15 +48,51 @@ void setup() {
 
   Serial.begin(9600);
   load_program();
-
-  delay(500);
-
-  read_ram();
-
-  Serial.println("Done");
+  delay(100);
+  digitalWrite(RESET, HIGH);
 }
 
 void loop() {
+  digitalWrite(CLK, LOW);
+  delay_custom();
+  digitalWrite(CLK, HIGH);
+  delay_custom();
+  if(digitalRead(MREQ)==LOW){ //Mem request
+    digitalWrite(CE, LOW);
+    if (digitalRead(RD)==LOW){ // Read data from ram
+      digitalWrite(OE, LOW);
+    } else if (digitalRead(WR)==LOW){  // Write data to ram
+      digitalWrite(WE,LOW);
+    }
+    delay_custom();
+    while (digitalRead(MREQ)==LOW){
+      digitalWrite(CLK, LOW);
+      delay_custom();
+      digitalWrite(CLK, HIGH);
+      delay_custom();
+    }
+    digitalWrite(OE, HIGH);
+    digitalWrite(WE, HIGH);
+    digitalWrite(CE, HIGH);
+    delay_custom();
+  } else if(digitalRead(IORQ)==LOW){ //Io request
+    if (digitalRead(RD)==LOW){ // Read data from ram
+      digitalWrite(OE, LOW);
+    } else if (digitalRead(WR)==LOW){  // Write data to ram
+      digitalWrite(WE,LOW);
+    }
+    delay_custom();
+    while (digitalRead(MREQ)==LOW){
+      digitalWrite(CLK, LOW);
+      delay_custom();
+      digitalWrite(CLK, HIGH);
+      delay_custom();
+    }
+    digitalWrite(OE, HIGH);
+    digitalWrite(WE, HIGH);
+    delay_custom();
+  } 
+
 
 }
 
@@ -75,7 +111,6 @@ void read_ram() {
     delay_custom();
     // chip enable low
     digitalWrite(CE, LOW);
-    delay_custom();
     // orite enable low
     digitalWrite(OE, LOW);
     delay_custom();
