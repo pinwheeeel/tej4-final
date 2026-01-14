@@ -72,43 +72,38 @@ void loop() {
   Serial.print(" | ");
   Serial.println(digitalRead(WR));
   if(digitalRead(MREQ)==LOW){ //Mem request
-    Serial.println("mreq low");
     digitalWrite(CE, LOW);
-    if (digitalRead(RD)==LOW){ // Read data from ram
-      digitalWrite(OE, LOW);
-    } else if (digitalRead(WR)==LOW){  // Write data to ram
-      digitalWrite(WE,LOW);
-    }
-    delay_custom();
-    while (digitalRead(MREQ)==LOW){
-      digitalWrite(WAIT,HIGH);
-      //Serial.println("mreq looping");
-      digitalWrite(CLK, LOW);
-      delay_custom();
-      delay(100);
-      digitalWrite(CLK, HIGH);
-      delay_custom();
-      delay(100);
-    }
-    digitalWrite(OE, HIGH);
-    digitalWrite(WE, HIGH);
-    digitalWrite(CE, HIGH);
-    delay_custom();
-  } else if(digitalRead(IORQ)==LOW){ //Io request
-    if (digitalRead(RD)==LOW){ // Read data from ram
-
-    } else if (digitalRead(WR)==LOW){  // Write data to ram
-      
-    }
-    delay_custom();
-    while (digitalRead(IORQ)==LOW){
-      digitalWrite(CLK, LOW);
-      delay_custom();
-      digitalWrite(CLK, HIGH);
-      delay_custom();
-    }
     delay_custom();
   }
+  if (digitalRead(IORQ)==LOW){
+
+  }
+  if (digitalRead(RD)==LOW){ // Read data from ram
+    digitalWrite(OE, LOW);
+    delay_custom();
+  }
+  if (digitalRead(WR)==LOW){  // Write data to ram
+    digitalWrite(WE,LOW);
+    delay_custom();
+  }
+
+  delay_custom();
+  
+  if (digitalRead(RD)==HIGH){ // Read data from ram
+    digitalWrite(OE, HIGH);
+    delay_custom();
+  }
+  if (digitalRead(WR)==HIGH){  // Write data to ram
+    digitalWrite(WE,HIGH);
+    delay_custom();
+  }
+  if(digitalRead(MREQ)==HIGH){ //Mem request
+    digitalWrite(CE, HIGH);
+    delay_custom();
+  }
+  if (digitalRead(IORQ)==HIGH){
+  }
+  read_ram_at(1024);
 }
 
 void delay_custom() {
@@ -252,7 +247,7 @@ void set_address_bus_output() {
 int read_address_bus() {
   int value = 0;
   // Serial.println("Read Address Bus");
-  for (int i = 0; i < 8; i++){
+  for (int i = 0; i < 11; i++){
     value |= digitalRead(A[i]) << i;
     // Serial.print(digitalRead(A[i]));
   }
