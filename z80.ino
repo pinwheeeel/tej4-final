@@ -17,9 +17,7 @@
 #define WE 27
 
 const int D[8] = { 2, 3, 4, 5, 6, 7, 8, 9 };
-const int A[11] = { 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49 };
-
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+const int A[11] = { 49, 47, 45, 43, 41, 39, 37, 35, 33, 31, 29 };
 
 const uint8_t program[] = {
   // bytes array
@@ -46,24 +44,38 @@ void setup() {
   pinMode(WR, INPUT);
   pinMode(BUSACK, INPUT);
   pinMode(WAIT, OUTPUT);
+  digitalWrite(WAIT,HIGH);
   pinMode(BUSREQ, OUTPUT);
   pinMode(RESET, OUTPUT);
   pinMode(M1, INPUT);
   pinMode(RFSH, INPUT);
+  pinMode(51,INPUT);
   Serial.begin(9600);
 
+  Serial.println("1");
   digitalWrite(CLK, HIGH);
   load_program();
   delay(1000);
+  Serial.println("2");
 
   read_ram(0, sizeof(program));
 }
-
+bool i= false;
 void loop() {
-  digitalWrite(CLK, LOW);
-  delay_custom();
-  digitalWrite(CLK, HIGH);
-  delay_custom();
+  // return;
+  if (!i){
+    digitalWrite(CLK,LOW);
+    delay_custom();
+    i = true;
+    Serial.println("low");
+  } else if (i) {
+    digitalWrite(CLK, HIGH);
+    delay_custom();
+    i = false;
+    Serial.println("high");
+  }
+  
+  
 
   // debug information
   Serial.print(digitalRead(IORQ));
@@ -74,11 +86,30 @@ void loop() {
   Serial.print(" | ");
   Serial.println(digitalRead(WR));
 
-  // should this stuff happen when clk is high? low? both?
-  digitalWrite(CE, digitalRead(MREQ));
-  digitalWrite(OE, digitalRead(RD));
-  digitalWrite(WE, digitalRead(WR));
-
+  Serial.println("change ce oe we");
+  if (!digitalRead(MREQ)){
+    digitalWrite(CE,LOW);
+  }
+  if (!digitalRead(RD)){
+    digitalWrite(OE,LOW);
+  }
+  if (!digitalRead(WR)){
+    digitalWrite(WE,LOW);
+  }
+  delay_custom();
+  Serial.println(read_data_bus());
+  Serial.println(read_address_bus());
+  delay_custom();
+  if (digitalRead(RD)){
+    digitalWrite(OE,HIGH);
+  }
+  if (digitalRead(WR)){
+    digitalWrite(WE,HIGH);
+  }
+  if (digitalRead(MREQ)){
+    digitalWrite(CE,HIGH);
+  }
+  
   if (digitalRead(IORQ) == LOW) {  // io request
     // do something
   }
@@ -90,8 +121,7 @@ void delay_custom() {
 
 // DEBUG: reading ram
 void read_ram(int start, int end) {
-  take_bus();
-
+  //take_bus();
   set_address_bus_output();
   set_data_bus_input();
 
@@ -113,8 +143,11 @@ void read_ram(int start, int end) {
     digitalWrite(CE, HIGH);
     delay_custom();
   }
+  set_address_bus_input();
+  set_data_bus_input();
 
-  release_bus();
+  //release_bus();
+  digitalWrite(RESET, HIGH);
 }
 
 // LOAD PROGRAM
@@ -153,7 +186,7 @@ void load_program() {
 
   set_data_bus_input();
   set_address_bus_input();
-  digitalWrite(RESET, HIGH);
+  //digitalWrite(RESET, HIGH);
 }
 
 
